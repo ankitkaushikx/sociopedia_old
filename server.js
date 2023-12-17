@@ -9,6 +9,9 @@ import morgan from "morgan";
 import path from "path"; //native package
 import { fileURLToPath } from "url";
 import connectDB from "./db.js";
+
+// ROUTES IMPORT---
+import { register } from "./controllers/auth.js";
 /* CONFIGURATIONS   */
 /* Set __filename to absolute path of current module   [D:\mainProjects\Learning\sociopedia\server\server.js] */
 const __filename = fileURLToPath(import.meta.url);
@@ -24,14 +27,14 @@ app.use(express.json());
 /* Middleware to add Headers to our HTTP request -- make our app secure */
 app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" })); ///Let App can accept cross origin request i.e. request origin can be different form resource origin ///
-app.use(morgan); //To Log HTTP request Data
+app.use(morgan("short")); //To Log HTTP request Data
 app.use(bodyParser.json({ limit: "30mb", extended: true })); //Let parse HTTP request before handlers and if json payload is more then 30m then reject it and extended: true will let accept  rich objects
 app.use(bodyParser.urlencoded({ limit: "30mb", extended: true })); //parse  url encoded data
 app.use(cors()); //cross origin resource policy
 /*  sets up a route /assests to serve static files from the public/assests directory in the Express app. */
 app.use("/assests", express.static(path.join(__dirname, "public/assests")));
 
-/*---------------------------------FILE STORAGE--------------------------------------------------------------------------------------------*/
+/*-------------------------------------------------- FILE STORAGE-----------------------------------------------------------------------*/
 /* It defines the destination folder for storing uploaded files as "public/assests"
  and maintains the original file names during storage. */
 const storage = multer.diskStorage({
@@ -44,7 +47,12 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+/*------------------------------------------------ROUTES----------------------------------------------------------*/
 
+app.post("/auth/register", upload.single("picture"), register);
+app.get("/", (req, res) => {
+  res.send("Working");
+});
 /*------------------------------------------------DATABASE AND SERVER ---------------------------------------------*/
 const PORT = process.env.PORT || 5000;
 await connectDB()
