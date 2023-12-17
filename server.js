@@ -1,45 +1,42 @@
+// server.js
+
 import dotenv from "dotenv/config";
 import express from "express";
 import bodyParser from "body-parser";
-
 import cors from "cors";
 import multer from "multer";
 import helmet from "helmet";
 import morgan from "morgan";
-import path from "path"; //native package
+import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./db.js";
 
 // ROUTES IMPORT---
+import authRoutes from "./routes/authRoutes.js"; // Import authRoutes
 import { register } from "./controllers/auth.js";
 /* CONFIGURATIONS   */
-/* Set __filename to absolute path of current module   [D:\mainProjects\Learning\sociopedia\server\server.js] */
 const __filename = fileURLToPath(import.meta.url);
-
-/* set __dirname to directory path of current module [D:\mainProjects\Learning\sociopedia\server]  */
 const __dirname = path.dirname(__filename);
 
-/* Creating a Express App */
+/* Creating an Express App */
 const app = express();
 
-/* Enable app to parse (read) json data in body request */
+/* Enable the app to parse (read) json data in body request */
 app.use(express.json());
-/* Middleware to add Headers to our HTTP request -- make our app secure */
+/* Middleware to add headers to our HTTP request -- make our app secure */
 app.use(helmet());
-app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" })); ///Let App can accept cross origin request i.e. request origin can be different form resource origin ///
-app.use(morgan("short")); //To Log HTTP request Data
-app.use(bodyParser.json({ limit: "30mb", extended: true })); //Let parse HTTP request before handlers and if json payload is more then 30m then reject it and extended: true will let accept  rich objects
-app.use(bodyParser.urlencoded({ limit: "30mb", extended: true })); //parse  url encoded data
-app.use(cors()); //cross origin resource policy
-/*  sets up a route /assests to serve static files from the public/assests directory in the Express app. */
-app.use("/assests", express.static(path.join(__dirname, "public/assests")));
 
-/*-------------------------------------------------- FILE STORAGE-----------------------------------------------------------------------*/
-/* It defines the destination folder for storing uploaded files as "public/assests"
- and maintains the original file names during storage. */
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
+app.use(morgan("short"));
+app.use(bodyParser.json({ limit: "30mb", extended: true }));
+app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
+app.use(cors());
+app.use("/assets", express.static(path.join(__dirname, "public/assets")));
+
+/* FILE STORAGE */
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "public/assests");
+    cb(null, "public/assets");
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname);
@@ -47,14 +44,19 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
-/*------------------------------------------------ROUTES----------------------------------------------------------*/
+
+/* ROUTES */
+// Mount authRoutes at the path "/auth"
+app.use("/auth", authRoutes);
 
 app.post("/auth/register", upload.single("picture"), register);
 app.get("/", (req, res) => {
   res.send("Working");
 });
-/*------------------------------------------------DATABASE AND SERVER ---------------------------------------------*/
+
+/* DATABASE AND SERVER */
 const PORT = process.env.PORT || 5000;
+
 await connectDB()
   .then(() => {
     app.listen(PORT, () => {
