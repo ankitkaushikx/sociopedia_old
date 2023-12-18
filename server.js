@@ -1,5 +1,3 @@
-// server.js
-
 import dotenv from "dotenv/config";
 import express from "express";
 import bodyParser from "body-parser";
@@ -11,9 +9,13 @@ import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./db.js";
 
-// ROUTES IMPORT---
+// ROUTES IMPORT
 import authRoutes from "./routes/authRoutes.js"; // Import authRoutes
 import { register } from "./controllers/auth.js";
+import userRoutes from "./routes/userRoutes.js";
+import postRoutes from "./routes/postRoutes.js";
+import { createPost } from "./controllers/post.js";
+import { verifyToken } from "./middleware/auth.js";
 /* CONFIGURATIONS   */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,7 +50,10 @@ const upload = multer({ storage });
 /* ROUTES */
 // Mount authRoutes at the path "/auth"
 app.use("/auth", authRoutes);
+app.use("/user", userRoutes);
 
+// ROUTES WITH FILES
+app.post("/posts", verifyToken, upload.single("picture"), createPost);
 app.post("/auth/register", upload.single("picture"), register);
 app.get("/", (req, res) => {
   res.send("Working");
